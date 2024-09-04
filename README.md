@@ -1,0 +1,2 @@
+# AirNow Air Quality API
+ This repository contains scripts to retrieve and analyze air quality data from the AirNow API for all zip codes in Florida. The data includes key pollutants such as CO, SO2, NO2, PM2.5, and PM10, and is saved in a CSV format for further analysis. The repository is designed with API rate limits in mind, ensuring efficient data collection over time. Visualization of this data can be done using geospatial tools to provide insights into air quality trends across the state.
