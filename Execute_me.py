@@ -4,7 +4,7 @@ import csv
 from uszipcode import SearchEngine
 
 # Load API key from a file (to keep it secure)
-with open('api_key_file.txt', 'r') as f:
+with open('api.txt', 'r') as f:
     api_key = f.read().strip()
 
 # Function to get all zip codes in Florida
