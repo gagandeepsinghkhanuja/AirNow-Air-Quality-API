@@ -1,2 +1,11 @@
-# AirNow Air Quality API
- This repository contains scripts to retrieve and analyze air quality data from the AirNow API for all zip codes in Florida. The data includes key pollutants such as CO, SO2, NO2, PM2.5, and PM10, and is saved in a CSV format for further analysis. The repository is designed with API rate limits in mind, ensuring efficient data collection over time. Visualization of this data can be done using geospatial tools to provide insights into air quality trends across the state.
+# Florida AQI Monitoring and Visualization
+
+## Overview
+
+This project leverages the AirNow API to monitor air quality across all zip codes in Florida. Using Python for data automation and Streamlit for interactive data visualization, this tool provides real-time insights into key pollutants, including AQI (Air Quality Index), PM2.5, PM10, and O3.
+
+The project is designed to:
+
+	•	Retrieve current, forecast, and historical AQI data using the AirNow API.
+	•	Visualize AQI data on an interactive map using Streamlit and Plotly.
+	•	Help users monitor air quality across different regions in Florida and make informed decisions.
