@@ -2,10 +2,16 @@ import requests
 import time
 import csv
 from uszipcode import SearchEngine
+import logging
 
 # Load API key from a file (to keep it secure)
 with open('api.txt', 'r') as f:
     api_key = f.read().strip()
+
+# Set up logging
+logging.basicConfig(filename='aqi_data_log.log', 
+                    level=logging.INFO, 
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Function to get all zip codes in Florida
 def get_florida_zip_codes():
@@ -14,67 +20,157 @@ def get_florida_zip_codes():
     zip_codes = [zipcode.zipcode for zipcode in florida_zip_codes]
     return zip_codes
 
-# Function to get AQI data for a specific zip code with retry logic
-def get_aqi_for_zip(zip_code, retries=3, delay=5):
-    url = f"http://www.airnowapi.org/aq/observation/zipCode/current/"
+# Function to get forecast data for a specific zip code
+def get_aqi_forecast_for_zip(zip_code):
+    url = "http://www.airnowapi.org/aq/forecast/zipCode/"
     params = {
         'format': 'application/json',
         'zipCode': zip_code,
         'distance': 25,
         'API_KEY': api_key
     }
-
-    for attempt in range(retries):
-        response = requests.get(url, params=params)
-        if response.status_code == 200:
-            return response.json()
-        elif response.status_code == 429:
-            print(f"Rate limit hit. Retrying in {delay} seconds...")
-            time.sleep(delay)
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        if data:
+            return data
         else:
-            print(f"Failed to retrieve data for zip code {zip_code}. Status code: {response.status_code}")
+            logging.warning(f"No forecast data available for zip code {zip_code}")
             return None
-    return None
+    else:
+        logging.error(f"Failed to retrieve forecast data for zip code {zip_code}. Status code: {response.status_code}")
+        return None
 
-# Function to pull AQI data for all Florida zip codes and save to a CSV file
-def get_aqi_for_florida_and_save_to_csv(filename='florida_aqi_data.csv'):
+# Function to get current observation data for a specific zip code
+def get_aqi_current_observation_for_zip(zip_code):
+    url = "http://www.airnowapi.org/aq/observation/zipCode/current/"
+    params = {
+        'format': 'application/json',
+        'zipCode': zip_code,
+        'distance': 25,
+        'API_KEY': api_key
+    }
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        if data:
+            return data
+        else:
+            logging.warning(f"No current observation data available for zip code {zip_code}")
+            return None
+    else:
+        logging.error(f"Failed to retrieve current observation data for zip code {zip_code}. Status code: {response.status_code}")
+        return None
+
+# Function to get historical observation data for a specific zip code
+def get_aqi_historical_observation_for_zip(zip_code, date):
+    url = "http://www.airnowapi.org/aq/observation/zipCode/historical/"
+    params = {
+        'format': 'application/json',
+        'zipCode': zip_code,
+        'distance': 25,
+        'date': date,  # Format: yyyy-mm-ddT00-0000
+        'API_KEY': api_key
+    }
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        if data:
+            return data
+        else:
+            logging.warning(f"No historical data available for zip code {zip_code} on {date}")
+            return None
+    else:
+        logging.error(f"Failed to retrieve historical data for zip code {zip_code} on {date}. Status code: {response.status_code}")
+        return None
+
+# Function to pull data for all Florida zip codes and save to a CSV file
+def get_aqi_data_for_florida_and_save_to_csv(filename='florida_aqi_data.csv', date='2024-09-01T00-0000'):
     florida_zip_codes = get_florida_zip_codes()
-    fieldnames = ['Zip Code', 'DateObserved', 'AQI', 'Category', 'ParameterName', 'ReportingArea', 'StateCode', 'Latitude', 'Longitude']
+    fieldnames = ['ZIP_CODE', 'TYPE', 'DATE', 'REPORTING_AREA', 'STATE_CODE', 'LATITUDE', 'LONGITUDE', 
+                  'PARAMETER_NAME', 'AQI', 'CATEGORY_NUMBER', 'CATEGORY_NAME', 'ACTION_DAY', 'DISCUSSION']
+    
+    # Set the request count and delay
+    request_count = 0
+    max_requests_per_hour = 499
+    delay_between_requests = 3600 / max_requests_per_hour  # ~7.2 seconds
     
     with open(filename, mode='w', newline='') as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
         
-        request_count = 0
         for index, zip_code in enumerate(florida_zip_codes):
-            print(f"Processing zip code {zip_code} ({index + 1}/{len(florida_zip_codes)})")
-            aqi_data = get_aqi_for_zip(zip_code)
-            if aqi_data:
-                for data in aqi_data:
-                    # Filter for specific pollutants: CO, SO2, NO2
-                    if data['ParameterName'] in ['CO', 'SO2', 'NO2', 'PM2.5', 'PM10']:
-                        writer.writerow({
-                            'Zip Code': zip_code,
-                            'DateObserved': data['DateObserved'],
-                            'AQI': data['AQI'],
-                            'Category': data['Category']['Name'],
-                            'ParameterName': data['ParameterName'],
-                            'ReportingArea': data['ReportingArea'],
-                            'StateCode': data['StateCode'],
-                            'Latitude': data['Latitude'],
-                            'Longitude': data['Longitude']
-                        })
-                request_count += 1
+            logging.info(f"Processing zip code {zip_code} ({index + 1}/{len(florida_zip_codes)})")
 
-            # Check if the request count has reached 499
-            if request_count >= 499:
-                print("Reached 499 requests. Pausing for 1 hour...")
-                time.sleep(3600)  # Sleep for 1 hour
-                request_count = 0  # Reset request count after the pause
+            # Get forecast data
+            forecast_data = get_aqi_forecast_for_zip(zip_code)
+            if forecast_data:
+                for data in forecast_data:
+                    writer.writerow({
+                        'ZIP_CODE': zip_code,
+                        'TYPE': 'FORECAST',
+                        'DATE': data.get('DateForecast', 'N/A'),
+                        'REPORTING_AREA': data.get('ReportingArea', 'N/A'),
+                        'STATE_CODE': data.get('StateCode', 'N/A'),
+                        'LATITUDE': data.get('Latitude', 'N/A'),
+                        'LONGITUDE': data.get('Longitude', 'N/A'),
+                        'PARAMETER_NAME': data.get('ParameterName', 'N/A'),
+                        'AQI': data.get('AQI', -1),
+                        'CATEGORY_NUMBER': data.get('Category', {}).get('Number', 'N/A'),
+                        'CATEGORY_NAME': data.get('Category', {}).get('Name', 'N/A'),
+                        'ACTION_DAY': data.get('ActionDay', False),
+                        'DISCUSSION': data.get('Discussion', 'N/A')
+                    })
 
-            time.sleep(3)  # Add delay between requests to avoid hitting rate limits
+            # Get current observation data
+            current_data = get_aqi_current_observation_for_zip(zip_code)
+            if current_data:
+                for data in current_data:
+                    writer.writerow({
+                        'ZIP_CODE': zip_code,
+                        'TYPE': 'CURRENT_OBSERVATION',
+                        'DATE': data.get('DateObserved', 'N/A'),
+                        'REPORTING_AREA': data.get('ReportingArea', 'N/A'),
+                        'STATE_CODE': data.get('StateCode', 'N/A'),
+                        'LATITUDE': data.get('Latitude', 'N/A'),
+                        'LONGITUDE': data.get('Longitude', 'N/A'),
+                        'PARAMETER_NAME': data.get('ParameterName', 'N/A'),
+                        'AQI': data.get('AQI', -1),
+                        'CATEGORY_NUMBER': data.get('Category', {}).get('Number', 'N/A'),
+                        'CATEGORY_NAME': data.get('Category', {}).get('Name', 'N/A'),
+                        'ACTION_DAY': 'N/A',
+                        'DISCUSSION': 'N/A'
+                    })
+
+            # Get historical observation data for the specified date
+            historical_data = get_aqi_historical_observation_for_zip(zip_code, date)
+            if historical_data:
+                for data in historical_data:
+                    writer.writerow({
+                        'ZIP_CODE': zip_code,
+                        'TYPE': 'HISTORICAL_OBSERVATION',
+                        'DATE': data.get('DateObserved', 'N/A'),
+                        'REPORTING_AREA': data.get('ReportingArea', 'N/A'),
+                        'STATE_CODE': data.get('StateCode', 'N/A'),
+                        'LATITUDE': data.get('Latitude', 'N/A'),
+                        'LONGITUDE': data.get('Longitude', 'N/A'),
+                        'PARAMETER_NAME': data.get('ParameterName', 'N/A'),
+                        'AQI': data.get('AQI', -1),
+                        'CATEGORY_NUMBER': data.get('Category', {}).get('Number', 'N/A'),
+                        'CATEGORY_NAME': data.get('Category', {}).get('Name', 'N/A'),
+                        'ACTION_DAY': 'N/A',
+                        'DISCUSSION': 'N/A'
+                    })
+
+            # Increment request count and delay between requests
+            request_count += 1
+            if request_count >= max_requests_per_hour:
+                request_count = 0  # Reset after hitting 500 requests
+            time.sleep(delay_between_requests)  # Delay to maintain 500 requests per hour
 
 # Example usage
 if __name__ == "__main__":
-    get_aqi_for_florida_and_save_to_csv('florida_aqi_data.csv')
-    print("Data saved to florida_aqi_data.csv")
+    logging.info("Starting the AQI data retrieval process...")
+    get_aqi_data_for_florida_and_save_to_csv('florida_aqi_data.csv')
+    logging.info("Data saved to florida_aqi_data.csv")
+    logging.info("Process completed successfully.")
