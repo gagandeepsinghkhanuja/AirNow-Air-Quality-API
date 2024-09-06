@@ -70,4 +70,4 @@ The Streamlit app provides three main visualizations:
 
 ## Demo
 
-A demo of the project is hosted on Streamlit Cloud. You can access it here: 
+A demo of the project is hosted on Streamlit Cloud. You can access it [here](https://florida-air-quality-6ectjvmx2d2mx49fup8i6y.streamlit.app)
