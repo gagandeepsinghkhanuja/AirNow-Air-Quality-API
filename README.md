@@ -10,9 +10,13 @@ The project is designed to:
 	•	Visualize AQI data on an interactive map using Streamlit and Plotly.
 	•	Help users monitor air quality across different regions in Florida and make informed decisions.
 
-Features
+## Features
 
 	•	Current Observations: Visualize real-time AQI data for all Florida cities on an interactive map.
 	•	Forecast Data: View predicted AQI levels for the coming days across different cities.
 	•	Historical Data: Explore past AQI data to understand trends and pollution patterns.
 	•	Interactive Map: The app uses Plotly’s scatter_mapbox to display data points on an open street map, color-coded based on AQI levels.
+## Project Structure
+
+	•	Data Retrieval: Python scripts automatically fetch AQI data from the AirNow API for all active zip codes in Florida. The data is stored in a CSV file for further analysis and visualization.
+	•	Streamlit App: The Streamlit app is built to load data from the CSV file and visualize it in a user-friendly manner. Users can interact with different tabs to switch between current, forecast, and historical AQI data.
