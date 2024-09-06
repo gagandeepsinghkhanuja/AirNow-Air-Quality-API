@@ -42,3 +42,32 @@ The Streamlit app provides three main visualizations:
 	•	Plotly: For interactive data visualization on maps.
 	•	AirNow API: For retrieving AQI, forecast, and historical air quality data.
 	•	uszipcode: To fetch and process Florida zip code data.
+
+### Installation
+
+	1.	Clone the repository:
+ 		git clone https://github.com/gagandeepsinghkhanuja/Florida-Air-Quality.git
+		cd your-repo-name
+  	2.	Install dependencies:
+		Make sure you have Python installed. Then install the required libraries by running:
+  		pip install -r requirements.txt
+	3.	Set up the AirNow API key:
+		Obtain an API key from AirNow API.
+		Create a file called api.txt in the project root and paste your API key inside.
+	4.	Run the Streamlit app:
+ 		streamlit run aqi_app.py
+## Usage
+
+	•	The Streamlit app will launch in your web browser.
+	•	You can explore different tabs for real-time, forecast, and historical data visualizations.
+	•	Use the interactive map to zoom in on specific locations and view detailed AQI metrics for each city.
+
+## Future Enhancements
+
+	•	State-wide Coverage: Extend the project to include other states in the U.S. by expanding the zip code retrieval process.
+	•	Data Filtering: Add filters for users to select specific dates, pollutant types, or geographical areas.
+
+
+## Demo
+
+A demo of the project is hosted on Streamlit Cloud. You can access it here: 
