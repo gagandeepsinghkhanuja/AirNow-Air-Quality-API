@@ -71,3 +71,5 @@ The Streamlit app provides three main visualizations:
 ## Demo
 
 A demo of the project is hosted on Streamlit Cloud. You can access it [here](https://florida-air-quality-6ectjvmx2d2mx49fup8i6y.streamlit.app)
+[Image1](https://github.com/gagandeepsinghkhanuja/Florida-Air-Quality/blob/main/Output/Image1.png)
+[Image2](https://github.com/gagandeepsinghkhanuja/Florida-Air-Quality/blob/main/Output/Image2.png)
